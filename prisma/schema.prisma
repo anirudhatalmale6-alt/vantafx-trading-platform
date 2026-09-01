@@ -1,0 +1,106 @@
+// Swap `provider` to "postgresql" and repoint DATABASE_URL to move off SQLite.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  country      String?
+  role         String   @default("USER") // USER | ADMIN
+  status       String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  balance      Float    @default(10000) // paper trading balance, account currency USD
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions     Session[]
+  trades       Trade[]
+  messages     ChatMessage[] @relation("MessageAuthor")
+  thread       ChatThread?
+
+  @@index([role])
+  @@index([status])
+}
+
+model Session {
+  id        String   @id // sha256 of the cookie token - the raw token is never stored
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Trade {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol     String // e.g. EURUSD
+  side       String // BUY | SELL
+  volume     Float // lots, 1 lot = 100,000 units of base currency
+  openPrice  Float
+  closePrice Float?
+  stopLoss   Float?
+  takeProfit Float?
+  status     String    @default("OPEN") // OPEN | CLOSED
+  closeType  String? // MANUAL | STOP_LOSS | TAKE_PROFIT | ADMIN
+  pnl        Float? // realised profit/loss in USD, set on close
+  openedAt   DateTime  @default(now())
+  closedAt   DateTime?
+
+  @@index([userId, status])
+  @@index([status])
+}
+
+model ChatThread {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+  // Unread counters kept denormalised so the admin inbox is a single cheap query.
+  unreadForUser  Int     @default(0)
+  unreadForAdmin Int     @default(0)
+
+  messages ChatMessage[]
+
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  fromAdmin Boolean  @default(false)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([threadId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  targetId  String?
+  detail    String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

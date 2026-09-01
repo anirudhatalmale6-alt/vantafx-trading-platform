@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #060a12;
+  --color-ink-900: #0a1020;
+  --color-ink-850: #0e152a;
+  --color-ink-800: #121b33;
+  --color-ink-700: #1a2545;
+  --color-ink-600: #24325c;
+  --color-mist-500: #7c8bb0;
+  --color-mist-300: #b6c0d8;
+  --color-mist-100: #e7ecf7;
+
+  --color-accent-400: #4ade9b;
+  --color-accent-500: #22c07d;
+  --color-accent-600: #16a068;
+
+  --color-bull-500: #22c07d;
+  --color-bear-500: #f2545b;
+  --color-warn-500: #f2b13c;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-ink-950);
+  color: var(--color-mist-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers in tables and tickers must not jump around as digits change. */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-ink-900);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink-700);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-600);
+}
+
+@keyframes flash-up {
+  from { background-color: rgba(34, 192, 125, 0.22); }
+  to { background-color: transparent; }
+}
+@keyframes flash-down {
+  from { background-color: rgba(242, 84, 91, 0.22); }
+  to { background-color: transparent; }
+}
+.flash-up { animation: flash-up 600ms ease-out; }
+.flash-down { animation: flash-down 600ms ease-out; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 45s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+  .flash-up, .flash-down { animation: none; }
+}
